@@ -147,6 +147,9 @@ def main():
     bird = Bird((300, 200))
     bomb = Bomb((255, 0, 0), 10)
     beam = None  # ゲーム初期化時にはビームは存在しない
+    
+    happy_timer = 0  # 喜びエフェクト用のタイマー
+
     clock = pg.time.Clock()
     tmr = 0
     while True:
@@ -163,6 +166,7 @@ def main():
                 if beam.rct.colliderect(bomb.rct):
                     # ビームと爆弾の衝突判定
                     beam, bomb  = None, None
+                    happy_timer = 10
 
         if bomb is not None:
             if bird.rct.colliderect(bomb.rct):
@@ -173,11 +177,18 @@ def main():
                 return
 
         key_lst = pg.key.get_pressed()
-        bird.update(key_lst, screen)
+
+        if happy_timer > 0:
+            bird.change_img(6, screen)
+            happy_timer -= 1
+        else:
+            bird.update(key_lst, screen)
+
         if beam is not None:
             beam.update(screen)   
         if bomb is not None:
             bomb.update(screen)
+        
         pg.display.update()
         tmr += 1
         clock.tick(50)
