@@ -102,8 +102,14 @@ class Beam:
         self.img = pg.transform.rotozoom(pg.image.load(f"fig/beam.png"), angle, 1.0) # 画像を回転
 
         self.rct = self.img.get_rect()
-        self.rct.centery = bird.rct.centery
-        self.rct.left = bird.rct.right
+
+        self.rct.centerx = bird.rct.centerx + bird.rct.width * self.vx / 5
+        self.rct.centery = bird.rct.centery + bird.rct.height * self.vy / 5
+
+        norm = math.sqrt(self.vx**2 + self.vy**2)  # 速度ベクトル(vx, vy)の大きさを計算
+        if norm != 0:  # どの方向でも速さが常に5になるように調整
+            self.vx = self.vx * 5 / norm
+            self.vy = self.vy * 5 / norm
 
     def update(self, screen: pg.Surface):
         """
