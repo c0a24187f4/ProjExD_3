@@ -171,7 +171,7 @@ def main():
     bg_img = pg.image.load("fig/pg_bg.jpg")
     bird = Bird((300, 200))
     bombs = [Bomb((255, 0, 0), 10) for _ in range(NUM_OF_BOMBS)]
-    beam = None  # ゲーム初期化時にはビームは存在しない
+    beams = []  # ビームを複数管理するリスト
     
     happy_timer = 0  # 喜びエフェクト用のタイマー
 
@@ -185,18 +185,19 @@ def main():
                 return
             if event.type == pg.KEYDOWN and event.key == pg.K_SPACE:
               # スペースキー押下でBeamクラスのインスタンス生成
-                beam = Beam(bird)            
+                beams.append(Beam(bird))  # リストにBeamインスタンスを追加
         screen.blit(bg_img, [0, 0])
         
-        if beam is not None:  # ビームと爆弾の衝突判定
-            for i, bomb in enumerate(bombs):
-                if bomb is not None:
-                    if beam.rct.colliderect(bomb.rct):
-                        beam = None
-                        bombs[i] = None
-                        happy_timer = 50  # ５０フレーム（１秒）喜びこうかとんを表示
-                        score.score += 1  # スコアを１点加算
-                        break
+        for i, beam in enumerate(beams):  # ビームと爆弾の衝突判定
+            if beam is not None:
+                for j, bomb in enumerate(bombs):
+                    if bomb is not None:
+                        if beam.rct.colliderect(bomb.rct):
+                            beams[i] = None
+                            bombs[j] = None
+                            happy_timer = 50  # ５０フレーム（１秒）喜びこうかとんを表示
+                            score.score += 1  # スコアを１点加算
+                              # 複数の爆弾に当たる可能性があるのでbreakを削除
 
         for bomb in bombs:  # ゲームオーバー画面
             if bomb is not None:
@@ -209,20 +210,24 @@ def main():
                     time.sleep(1)
                     return
         
-        bombs = [bomb for bomb in bombs if bomb is not None]
+        bombs = [bomb for bomb in bombs if bomb is not None]  # Noneの爆弾を削除
 
         key_lst = pg.key.get_pressed()
 
-        if happy_timer > 0:
+        if happy_timer > 0:  # タイマーが０になるまでこうかとんの喜び状態
             bird.change_img(6, screen)
             happy_timer -= 1
-        else:
+        else:  # 動かせるようになる
             bird.update(key_lst, screen)
 
-        if beam is not None:
-            beam.update(screen)
-        for bomb in bombs:
+        for beam in beams:  # 複数のbeamをupdate
+            if beam is not None:
+                beam.update(screen)
+
+        for bomb in bombs:  # 複数のbombをupdate
             bomb.update(screen)
+
+        beams = [beam for beam in beams if beam is not None and check_bound(beam.rct) == (True, True)]  # Noneのビームと画面外のビームをリストから削除
 
         score.update(screen)
 
