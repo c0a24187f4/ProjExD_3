@@ -9,6 +9,7 @@ import pygame as pg
 WIDTH = 1100  # ゲームウィンドウの幅
 HEIGHT = 650  # ゲームウィンドウの高さ
 NUM_OF_BOMBS = 5
+VELOCITY = 5  # すべての速度を定義する定数
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
 
@@ -31,22 +32,22 @@ class Bird:
     ゲームキャラクター（こうかとん）に関するクラス
     """
     delta = {  # 押下キーと移動量の辞書
-        pg.K_UP: (0, -5),
-        pg.K_DOWN: (0, +5),
-        pg.K_LEFT: (-5, 0),
-        pg.K_RIGHT: (+5, 0),
+        pg.K_UP: (0, -VELOCITY),
+        pg.K_DOWN: (0, +VELOCITY),
+        pg.K_LEFT: (-VELOCITY, 0),
+        pg.K_RIGHT: (+VELOCITY, 0),
     }
     img0 = pg.transform.rotozoom(pg.image.load("fig/3.png"), 0, 0.9)
     img = pg.transform.flip(img0, True, False)  # デフォルトのこうかとん（右向き）
     imgs = {  # 0度から反時計回りに定義
-        (+5, 0): img,  # 右
-        (+5, -5): pg.transform.rotozoom(img, 45, 0.9),  # 右上
-        (0, -5): pg.transform.rotozoom(img, 90, 0.9),  # 上
-        (-5, -5): pg.transform.rotozoom(img0, -45, 0.9),  # 左上
-        (-5, 0): img0,  # 左
-        (-5, +5): pg.transform.rotozoom(img0, 45, 0.9),  # 左下
-        (0, +5): pg.transform.rotozoom(img, -90, 0.9),  # 下
-        (+5, +5): pg.transform.rotozoom(img, -45, 0.9),  # 右下
+        (+VELOCITY, 0): img,  # 右
+        (+VELOCITY, -VELOCITY): pg.transform.rotozoom(img, 45, 0.9),  # 右上
+        (0, -VELOCITY): pg.transform.rotozoom(img, 90, 0.9),  # 上
+        (-VELOCITY, -VELOCITY): pg.transform.rotozoom(img0, -45, 0.9),  # 左上
+        (-VELOCITY, 0): img0,  # 左
+        (-VELOCITY, +VELOCITY): pg.transform.rotozoom(img0, 45, 0.9),  # 左下
+        (0, +VELOCITY): pg.transform.rotozoom(img, -90, 0.9),  # 下
+        (+VELOCITY, +VELOCITY): pg.transform.rotozoom(img, -45, 0.9),  # 右下
     }
 
     def __init__(self, xy: tuple[int, int]):
@@ -54,10 +55,10 @@ class Bird:
         こうかとん画像Surfaceを生成する
         引数 xy：こうかとん画像の初期位置座標タプル
         """
-        self.img = __class__.imgs[(+5, 0)]
+        self.img = __class__.imgs[(+VELOCITY, 0)]
         self.rct: pg.Rect = self.img.get_rect()
         self.rct.center = xy
-        self.dire = (+5, 0)  # こうかとんの向きを表すタプル
+        self.dire = (+VELOCITY, 0)  # こうかとんの向きを表すタプル
 
     def change_img(self, num: int, screen: pg.Surface):
         """
@@ -103,13 +104,13 @@ class Beam:
 
         self.rct = self.img.get_rect()
 
-        self.rct.centerx = bird.rct.centerx + bird.rct.width * self.vx / 5
-        self.rct.centery = bird.rct.centery + bird.rct.height * self.vy / 5
+        self.rct.centerx = bird.rct.centerx + bird.rct.width * self.vx / VELOCITY
+        self.rct.centery = bird.rct.centery + bird.rct.height * self.vy / VELOCITY
 
         norm = math.sqrt(self.vx**2 + self.vy**2)  # 速度ベクトル(vx, vy)の大きさを計算
         if norm != 0:  # どの方向でも速さが常に5になるように調整
-            self.vx = self.vx * 5 / norm
-            self.vy = self.vy * 5 / norm
+            self.vx = self.vx * VELOCITY / norm
+            self.vy = self.vy * VELOCITY / norm
 
     def update(self, screen: pg.Surface):
         """
@@ -136,7 +137,7 @@ class Bomb:
         self.img.set_colorkey((0, 0, 0))
         self.rct = self.img.get_rect()
         self.rct.center = random.randint(0, WIDTH), random.randint(0, HEIGHT)
-        self.vx, self.vy = +5, +5
+        self.vx, self.vy = +VELOCITY, +VELOCITY
 
     def update(self, screen: pg.Surface):
         """
