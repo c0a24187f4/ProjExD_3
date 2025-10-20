@@ -165,19 +165,47 @@ class Score:
         screen.blit(self.img, self.rct)
 
 
+class Explosion:
+    """
+    爆発エフェクトに関するクラス
+    """
+    def __init__(self, bomb: Bomb):
+        """
+        爆発エフェクトSurfaceを生成する
+        引数 bomb：爆発する爆弾（Bombインスタンス）
+        """
+        img = pg.image.load("fig/explosion.gif")
+        self.imgs = [img, pg.transform.flip(img, True, False)]
+        self.rct = self.imgs[0].get_rect()
+        self.rct.center = bomb.rct.center
+        self.life = 10
+
+    def update(self, screen: pg.Surface):
+        """
+        爆発経過時間lifeを1減算し、爆発画像を交互に切り替えてblitする
+        引数 screen：画面Surface
+        """
+        self.life -= 1
+        if self.life > 0:
+            # 2フレームごとに画像を切り替える（チラつき防止）
+            img_index = (self.life // 2) % len(self.imgs) 
+            screen.blit(self.imgs[img_index], self.rct)
+
+
 def main():
     pg.display.set_caption("たたかえ！こうかとん")
     screen = pg.display.set_mode((WIDTH, HEIGHT))    
     bg_img = pg.image.load("fig/pg_bg.jpg")
     bird = Bird((300, 200))
+
     bombs = [Bomb((255, 0, 0), 10) for _ in range(NUM_OF_BOMBS)]
     beams = []  # ビームを複数管理するリスト
-    
-    happy_timer = 0  # 喜びエフェクト用のタイマー
+    explosions = []  # 爆発エフェクトを管理するリスト
 
     score = Score()
     clock = pg.time.Clock()
     tmr = 0
+    happy_timer = 0  # 喜びエフェクト用のタイマー
 
     while True:
         for event in pg.event.get():
@@ -195,6 +223,7 @@ def main():
                         if beam.rct.colliderect(bomb.rct):
                             beams[i] = None
                             bombs[j] = None
+                            explosions.append(Explosion(bomb))  # 爆発インスタンスをリストに追加
                             happy_timer = 50  # ５０フレーム（１秒）喜びこうかとんを表示
                             score.score += 1  # スコアを１点加算
                               # 複数の爆弾に当たる可能性があるのでbreakを削除
@@ -223,14 +252,16 @@ def main():
         for beam in beams:  # 複数のbeamをupdate
             if beam is not None:
                 beam.update(screen)
+        beams = [beam for beam in beams if beam is not None and check_bound(beam.rct) == (True, True)]  # Noneのビームと画面外のビームをリストから削除
 
         for bomb in bombs:  # 複数のbombをupdate
             bomb.update(screen)
 
-        beams = [beam for beam in beams if beam is not None and check_bound(beam.rct) == (True, True)]  # Noneのビームと画面外のビームをリストから削除
+        explosions = [exp for exp in explosions if exp.life > 0]  # lifeが0になったインスタンスを削除
+        for exp in explosions:  # exp(explosion)をupdate
+            exp.update(screen)
 
         score.update(screen)
-
         pg.display.update()
         tmr += 1
         clock.tick(50)
