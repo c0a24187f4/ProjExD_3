@@ -141,6 +141,30 @@ class Bomb:
         screen.blit(self.img, self.rct)
 
 
+class Score:
+    """
+    打ち落とした爆弾の数を表示するスコアに関するクラス
+    """
+    def __init__(self):
+        """
+        スコア表示用のSurfaceを生成する
+        """
+        self.fonto = pg.font.SysFont("hgp創英角ﾎﾟｯﾌﾟ体", 30)
+        self.color = (0, 0, 255)
+        self.score = 0
+        self.img = self.fonto.render(f"スコア: {self.score}", 0, self.color)
+        self.rct = self.img.get_rect()
+        self.rct.center = (100, HEIGHT - 50)
+
+    def update(self, screen: pg.Surface):
+        """
+        現在のスコアで文字列Surfaceを生成し、画面にblitする
+        引数 screen：画面Surface
+        """
+        self.img = self.fonto.render(f"スコア: {self.score}", 0, self.color)
+        screen.blit(self.img, self.rct)
+
+
 def main():
     pg.display.set_caption("たたかえ！こうかとん")
     screen = pg.display.set_mode((WIDTH, HEIGHT))    
@@ -151,8 +175,10 @@ def main():
     
     happy_timer = 0  # 喜びエフェクト用のタイマー
 
+    score = Score()
     clock = pg.time.Clock()
     tmr = 0
+
     while True:
         for event in pg.event.get():
             if event.type == pg.QUIT:
@@ -168,7 +194,8 @@ def main():
                     if beam.rct.colliderect(bomb.rct):
                         beam = None
                         bombs[i] = None
-                        happy_timer = 50
+                        happy_timer = 50  # ５０フレーム（１秒）喜びこうかとんを表示
+                        score.score += 1  # スコアを１点加算
                         break
 
         for bomb in bombs:  # ゲームオーバー画面
@@ -193,10 +220,12 @@ def main():
             bird.update(key_lst, screen)
 
         if beam is not None:
-            beam.update(screen)   
+            beam.update(screen)
         for bomb in bombs:
             bomb.update(screen)
-        
+
+        score.update(screen)
+
         pg.display.update()
         tmr += 1
         clock.tick(50)
